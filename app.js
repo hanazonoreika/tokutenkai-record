@@ -40,7 +40,34 @@
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (!Array.isArray(data.events)) throw new Error('JSONに events 配列がありません');
-      state.events = data.events.map((e, i) => ({ ...e, _id: String(e.id || `${e.date || 'unknown'}-${e.title || 'event'}-${i}`) }));
+     state.events = data.events.map((e, i) => {
+  // タイトル・メモ・その他の文字列をまとめて検索する
+  const searchableText = [
+    e.title,
+    e.member,
+    e.type,
+    e.place,
+    e.notes,
+    e.origin
+  ].filter(Boolean).join(' ');
+
+  // 本文由来の情報が notes に保存されている場合も判定する
+  const hasTokutenkai = searchableText.includes('特典会');
+  const hasIshou = searchableText.includes('衣装');
+
+  // 「特典会」と「衣装」の両方があれば、特典会として扱う
+  const type = hasTokutenkai && hasIshou
+    ? '特典会'
+    : e.type;
+
+  return {
+    ...e,
+    type,
+    _id: String(
+      e.id || `${e.date || 'unknown'}-${e.title || 'event'}-${i}`
+    )
+  };
+});
       state.loaded = true;
       const stamp = data.updated_at ? new Date(data.updated_at).toLocaleString('ja-JP') : '更新日時不明';
       $('syncStatus').textContent = `${state.events.length.toLocaleString('ja-JP')}件を読み込みました · データ更新：${stamp}`;
