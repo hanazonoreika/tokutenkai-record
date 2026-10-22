@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f4ff">
+  <meta name="description" content="イベント予定と特典会の衣装・ポーズ・会話・支出をまとめて記録する、自分用の特典会記録帳。">
+  <title>特典会記録帳</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-mark" aria-hidden="true">✦</div>
+    <div class="brand-copy"><p class="eyebrow">MY EVENT ARCHIVE</p><h1>特典会記録帳</h1></div>
+    <button id="secretToggle" class="secret-toggle" type="button" aria-pressed="false"><span aria-hidden="true">🔒</span> <span id="secretLabel">マル秘モード OFF</span></button>
+  </header>
+
+  <main class="page-shell">
+    <section class="welcome-panel">
+      <div><p class="eyebrow">YOUR MEMORIES, IN ONE PLACE</p><h2>会った日も、着た服も、話したことも。</h2><p class="welcome-text">予定表と連携して、特典会の記録を自分用に残そう。</p></div>
+      <div class="welcome-star" aria-hidden="true">✧</div>
+    </section>
+
+    <section class="stats-grid" aria-label="記録の概要">
+      <article class="stat-card"><span class="stat-label">記録したイベント</span><strong id="statRecords">0</strong><span class="stat-note">件</span></article>
+      <article class="stat-card"><span class="stat-label">今月の記録</span><strong id="statMonth">0</strong><span class="stat-note">件</span></article>
+      <article class="stat-card money-stat"><span class="stat-label">記録した支出合計</span><strong id="statSpend">¥0</strong><span class="stat-note">記録済み分</span></article>
+    </section>
+
+    <section class="content-grid">
+      <div class="main-column">
+        <section class="panel">
+          <div class="section-heading"><div><p class="eyebrow">EVENT CALENDAR DATA</p><h2>イベントを探す</h2></div><button id="refreshEvents" class="button button-quiet" type="button">↻ 更新</button></div>
+          <p id="syncStatus" class="status-line" role="status">イベントデータを読み込んでいます…</p>
+          <div class="filters">
+            <label class="search-label">キーワード<input id="searchInput" type="search" placeholder="イベント名・メンバー・会場"></label>
+            <label>種別<select id="typeFilter"><option value="">すべての種別</option><option>特典会</option><option>イベント</option><option>ライブ</option><option>舞台</option><option>リリース</option><option>テレビ</option><option>ラジオ</option><option>配信</option></select></label>
+            <label>表示<select id="viewFilter"><option value="special">特典会を優先</option><option value="all">全イベント</option><option value="recorded">記録済み</option></select></label>
+          </div>
+          <div id="eventList" class="event-list"><div class="empty-state">イベントを読み込んでいます…</div></div>
+          <div class="list-footer"><span id="eventCount">0件</span><button id="loadMore" class="button button-quiet" type="button" hidden>もっと見る</button></div>
+        </section>
+      </div>
+
+      <aside class="side-column">
+        <section class="panel editor-panel">
+          <div class="section-heading"><div><p class="eyebrow">MEMORY NOTE</p><h2 id="editorTitle">記録をつける</h2></div><span class="tiny-icon" aria-hidden="true">✎</span></div>
+          <p class="helper-text">左のイベントを選ぶと、基本情報が入ります。予定にないイベントも手入力で記録できます。</p>
+          <form id="recordForm">
+            <input id="recordId" type="hidden">
+            <input id="eventId" type="hidden">
+            <label>イベント名<input id="eventTitle" required maxlength="200" placeholder="例：個別特典会"></label>
+            <div class="two-fields"><label>日付<input id="eventDate" type="date" required></label><label>時間<input id="eventTime" type="text" maxlength="60" placeholder="例：14:00〜"></label></div>
+            <label>メンバー<input id="eventMember" maxlength="200" placeholder="例：平松賢人"></label>
+            <label>会場・場所<input id="eventPlace" maxlength="200" placeholder="会場名"></label>
+            <label>衣装<input id="outfit" maxlength="300" placeholder="着ていた衣装・コーデ"></label>
+            <label>ポーズ・撮影内容<input id="pose" maxlength="300" placeholder="例：ピース、ハート、指定ポーズ"></label>
+            <label>会話・思い出<textarea id="memo" rows="3" maxlength="4000" placeholder="話したこと、反応、あとで思い出したいこと"></textarea></label>
+            <label>公式ページ<input id="eventUrl" type="url" placeholder="https://…"></label>
+            <details class="expense-details" id="expenseDetails">
+              <summary>支出を記録する <span>＋</span></summary>
+              <div class="expense-inner">
+                <p class="helper-text">金額はこの端末のブラウザ内に保存されます。金額を入力すると合計を自動計算します。</p>
+                <div class="expense-row"><label>特典券・商品 単価（円）<input id="itemPrice" type="number" min="0" step="1" inputmode="numeric" value="0"></label><label>枚数・個数<input id="itemQty" type="number" min="0" step="1" inputmode="numeric" value="0"></label></div>
+                <label>交通費（円）<input id="transportCost" type="number" min="0" step="1" inputmode="numeric" value="0"></label>
+                <label>その他（円）<input id="otherCost" type="number" min="0" step="1" inputmode="numeric" value="0"></label>
+                <div class="total-row"><span>このイベントの合計</span><strong id="expenseTotal">¥0</strong></div>
+              </div>
+            </details>
+            <div class="form-actions"><button class="button button-primary" type="submit">記録を保存</button><button id="clearForm" class="button button-secondary" type="button">新規入力</button></div>
+            <button id="deleteRecord" class="delete-button" type="button" hidden>この記録を削除</button>
+          </form>
+        </section>
+
+        <section class="panel tools-panel">
+          <p class="eyebrow">YOUR DATA</p><h2>データ管理</h2>
+          <p class="helper-text">記録はこのブラウザに保存されます。端末変更やブラウザのデータ削除に備えて、定期的にバックアップしてください。</p>
+          <div class="tool-buttons"><button id="exportData" class="button button-secondary" type="button">↓ バックアップを書き出す</button><label class="button button-secondary import-button">↑ バックアップを復元<input id="importFile" type="file" accept="application/json,.json" hidden></label></div>
+          <p class="privacy-note"><span aria-hidden="true">ⓘ</span> マル秘モードは画面表示を隠す機能です。端末自体を他人と共有している場合、データの保護にはなりません。</p>
+        </section>
+      </aside>
+    </section>
+    <footer><span>特典会記録帳</span><span>記録はあなたのブラウザ内に保存されます。</span></footer>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
