@@ -202,3 +202,173 @@
   });
   loadLocal(); updateStats(); updateExpenseTotal(); fetchEvents();
 })();
+(() => {
+  const dateInput = document.getElementById("event-date");
+  const searchButton = document.getElementById("search-date");
+  const clearButton = document.getElementById("clear-date");
+  const calendar = document.getElementById("calendar");
+  const results = document.getElementById("date-results");
+
+  if (!dateInput || !searchButton || !clearButton ||
+      !calendar || !results) {
+    return;
+  }
+
+  let selectedDate = "";
+  let displayedMonth = new Date();
+
+  function getEvents() {
+    return Array.isArray(state.events) ? state.events : [];
+  }
+
+  function renderResults(date) {
+    selectedDate = date;
+
+    const events = getEvents().filter(event =>
+      String(event.date || "").slice(0, 10) === date
+    );
+
+    results.replaceChildren();
+
+    const heading = document.createElement("h3");
+    heading.textContent = date
+      ? `${date} のイベント（${events.length}件）`
+      : "日付を選択してください";
+
+    results.appendChild(heading);
+
+    events.forEach(event => {
+      const item = document.createElement("div");
+      item.className = "date-result";
+
+      const title = document.createElement("strong");
+      title.textContent = event.title || "タイトル未設定";
+      item.appendChild(title);
+
+      const detail = document.createElement("p");
+      detail.textContent = [
+        event.time,
+        event.member,
+        event.type,
+        event.place
+      ].filter(Boolean).join(" / ");
+
+      item.appendChild(detail);
+
+      if (event.url) {
+        const link = document.createElement("a");
+        link.href = event.url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = "公式情報を見る";
+        item.appendChild(link);
+      }
+
+      results.appendChild(item);
+    });
+
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    calendar.replaceChildren();
+
+    const year = displayedMonth.getFullYear();
+    const month = displayedMonth.getMonth();
+
+    const header = document.createElement("div");
+    header.style.gridColumn = "1 / -1";
+    header.style.display = "flex";
+    header.style.justifyContent = "space-between";
+    header.style.alignItems = "center";
+
+    const previous = document.createElement("button");
+    previous.textContent = "‹ 前月";
+    previous.type = "button";
+    previous.onclick = () => {
+      displayedMonth = new Date(year, month - 1, 1);
+      renderCalendar();
+    };
+
+    const heading = document.createElement("strong");
+    heading.textContent = `${year}年${month + 1}月`;
+
+    const next = document.createElement("button");
+    next.textContent = "翌月 ›";
+    next.type = "button";
+    next.onclick = () => {
+      displayedMonth = new Date(year, month + 1, 1);
+      renderCalendar();
+    };
+
+    header.append(previous, heading, next);
+    calendar.appendChild(header);
+
+    ["日", "月", "火", "水", "木", "金", "土"].forEach(day => {
+      const cell = document.createElement("div");
+      cell.textContent = day;
+      cell.style.textAlign = "center";
+      cell.style.fontWeight = "bold";
+      calendar.appendChild(cell);
+    });
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+
+    for (let i = 0; i < firstDay; i++) {
+      calendar.appendChild(document.createElement("div"));
+    }
+
+    const eventDates = new Set(
+      getEvents().map(event =>
+        String(event.date || "").slice(0, 10)
+      )
+    );
+
+    for (let day = 1; day <= lastDate; day++) {
+      const date =
+        `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "calendar-day";
+      button.textContent = String(day);
+
+      if (eventDates.has(date)) {
+        button.classList.add("has-events");
+      }
+
+      if (selectedDate === date) {
+        button.classList.add("selected");
+      }
+
+      button.onclick = () => {
+        dateInput.value = date;
+        renderResults(date);
+      };
+
+      calendar.appendChild(button);
+    }
+  }
+
+  searchButton.addEventListener("click", () => {
+    if (!dateInput.value) {
+      alert("日付を選択してください");
+      return;
+    }
+
+    const date = dateInput.value;
+    displayedMonth = new Date(date + "T12:00:00");
+    renderResults(date);
+  });
+
+  clearButton.addEventListener("click", () => {
+    dateInput.value = "";
+    selectedDate = "";
+    results.replaceChildren();
+    displayedMonth = new Date();
+    renderCalendar();
+  });
+
+  renderCalendar();
+})();
